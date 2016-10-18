@@ -4,7 +4,7 @@ goog.require('ol.format.WMSCapabilities');
 
 describe('ol.format.WMSCapabilities', function() {
 
-  ['1.1.1', '1.3.0'].forEach(function(version) {
+  ['1.1.0', '1.1.1', '1.3.0'].forEach(function(version) {
     describe('when parsing ogcsample.xml (' + version + ')', function() {
 
       var parser = new ol.format.WMSCapabilities();
