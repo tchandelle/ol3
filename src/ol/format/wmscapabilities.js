@@ -113,10 +113,33 @@ ol.format.WMSCapabilities.readBoundingBox_ = function(node, objectStack) {
   ];
 
   return {
-    'crs': node.getAttribute('CRS'),
+    'crs': node.getAttribute('CRS') || node.getAttribute('SRS'),
     'extent': extent,
     'res': resolutions
   };
+};
+
+
+/**
+ * @private
+ * @param {Node} node Node.
+ * @param {Array.<*>} objectStack Object stack.
+ * @return {ol.Extent|undefined} Bounding box object.
+ */
+ol.format.WMSCapabilities.readLatLonBoundingBox_ = function(node, objectStack) {
+  ol.DEBUG && console.assert(node.nodeType == Node.ELEMENT_NODE,
+      'node.nodeType should be ELEMENT');
+  ol.DEBUG && console.assert(node.localName == 'LatLonBoundingBox',
+      'localName should be LatLonBoundingBox');
+
+  var extent = [
+    ol.format.XSD.readDecimalString(node.getAttribute('minx')),
+    ol.format.XSD.readDecimalString(node.getAttribute('miny')),
+    ol.format.XSD.readDecimalString(node.getAttribute('maxx')),
+    ol.format.XSD.readDecimalString(node.getAttribute('maxy'))
+  ];
+
+  return extent;
 };
 
 
@@ -698,8 +721,12 @@ ol.format.WMSCapabilities.LAYER_PARSERS_ = ol.xml.makeStructureNS(
       'KeywordList': ol.xml.makeObjectPropertySetter(
           ol.format.WMSCapabilities.readKeywordList_),
       'CRS': ol.xml.makeObjectPropertyPusher(ol.format.XSD.readString),
+      'SRS': ol.xml.makeObjectPropertyPusher(ol.format.XSD.readString, 'CRS'),
       'EX_GeographicBoundingBox': ol.xml.makeObjectPropertySetter(
           ol.format.WMSCapabilities.readEXGeographicBoundingBox_),
+      'LatLonBoundingBox': ol.xml.makeObjectPropertySetter(
+          ol.format.WMSCapabilities.readLatLonBoundingBox_,
+          'EX_GeographicBoundingBox'),
       'BoundingBox': ol.xml.makeObjectPropertyPusher(
           ol.format.WMSCapabilities.readBoundingBox_),
       'Dimension': ol.xml.makeObjectPropertyPusher(

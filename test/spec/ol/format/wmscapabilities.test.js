@@ -4,7 +4,7 @@ goog.require('ol.format.WMSCapabilities');
 
 describe('ol.format.WMSCapabilities', function() {
 
-  ['1.3.0'].forEach(function(version) {
+  ['1.1.1', '1.3.0'].forEach(function(version) {
     describe('when parsing ogcsample.xml (' + version + ')', function() {
 
       var parser = new ol.format.WMSCapabilities();
@@ -35,9 +35,11 @@ describe('ol.format.WMSCapabilities', function() {
         expect(service.OnlineResource).to.eql('http://hostname/');
         expect(service.Fees).to.eql('none');
         expect(service.AccessConstraints).to.eql('none');
-        expect(service.LayerLimit).to.eql(16);
-        expect(service.MaxWidth).to.eql(2048);
-        expect(service.MaxHeight).to.eql(2048);
+        if (version === '1.3.0') {
+          expect(service.LayerLimit).to.eql(16);
+          expect(service.MaxWidth).to.eql(2048);
+          expect(service.MaxHeight).to.eql(2048);
+        }
 
         expect(contact.ContactPosition).to.eql('Computer Scientist');
         expect(contact.ContactPersonPrimary).to.eql({
@@ -49,13 +51,27 @@ describe('ol.format.WMSCapabilities', function() {
       it('can read Capability.Exception', function() {
         var exception = capabilities.Capability.Exception;
 
-        expect(exception).to.eql(['XML', 'INIMAGE', 'BLANK']);
+        var expectedFormat = ['XML', 'INIMAGE', 'BLANK'];
+
+        if (version !== '1.3.0') {
+          expectedFormat = ['application/vnd.ogc.se_xml',
+              'application/vnd.ogc.se_inimage',
+              'application/vnd.ogc.se_blank'];
+        }
+
+        expect(exception).to.eql(expectedFormat);
       });
 
       it('can read Capability.Request.GetCapabilities', function() {
         var getCapabilities = capabilities.Capability.Request.GetCapabilities;
 
-        expect(getCapabilities.Format).to.eql(['text/xml']);
+        var expectedFormat = ['text/xml'];
+
+        if (version !== '1.3.0') {
+          expectedFormat = ['application/vnd.ogc.wms_xml'];
+        }
+
+        expect(getCapabilities.Format).to.eql(expectedFormat);
         expect(getCapabilities.DCPType.length).to.eql(1);
         var http = getCapabilities.DCPType[0].HTTP;
         expect(http.Get.OnlineResource).to.eql('http://hostname/path?');
@@ -65,8 +81,13 @@ describe('ol.format.WMSCapabilities', function() {
       it('can read Capability.Request.GetFeatureInfo', function() {
         var getFeatureInfo = capabilities.Capability.Request.GetFeatureInfo;
 
-        expect(getFeatureInfo.Format).to.eql(
-            ['text/xml', 'text/plain', 'text/html']);
+        var expectedFormat = ['text/xml', 'text/plain', 'text/html'];
+
+        if (version !== '1.3.0') {
+          expectedFormat[0] = 'application/vnd.ogc.gml';
+        }
+
+        expect(getFeatureInfo.Format).to.eql(expectedFormat);
         expect(getFeatureInfo.DCPType.length).to.eql(1);
         var http = getFeatureInfo.DCPType[0].HTTP;
         expect(http.Get.OnlineResource).to.eql('http://hostname/path?');
@@ -128,8 +149,15 @@ describe('ol.format.WMSCapabilities', function() {
             size: [72, 72]
           }]
         }]);
+
+        var expectedFormat = 'XML';
+
+        if (version !== '1.3.0') {
+          expectedFormat = 'application/vnd.ogc.se_xml';
+        }
+
         expect(layer.Layer[0].FeatureListURL).to.eql([{
-          Format: 'XML',
+          Format: expectedFormat,
           OnlineResource: 'http://www.university.edu/data/roads_rivers.gml'
         }]);
         expect(layer.Layer[0].Attribution).to.eql({
