@@ -130,6 +130,7 @@ ol.control.Rotate.prototype.resetNorth_ = function() {
       if (currentRotation > Math.PI) {
         currentRotation -= 2 * Math.PI;
       }
+      view.setRotation(currentRotation);
       view.animate({
         rotation: 0,
         duration: this.duration_,
